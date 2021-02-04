@@ -192,7 +192,7 @@ const generateShift = (time, plant) => {
   })[0].name;
 };
 
-const getShiftTime = (plantName, shift) => {
+const getShiftTime = (plantName, shift, baseTime = null) => {
   const shiftList = SHIFT[plantName.toUpperCase()][`SHIFT ${shift}`];
   let startTime,
     endTime = null;
@@ -201,23 +201,40 @@ const getShiftTime = (plantName, shift) => {
     moment().format("HH:mm:ss"),
     plantName.toLowerCase()
   );
+
+  const baseDate = baseTime ? baseTime : moment().format("YYYY-MM-DD");
+
   if (shiftNow == 3) {
-    if (
-      moment() >= moment("00:00:00", "HH:mm:ss") &&
-      moment() <= moment(shiftList[shiftList.length - 1], "HH:mm:ss")
-    ) {
-      startTime = moment(shiftList[0], "HH:mm:ss").subtract(1, "days");
-      endTime = moment(shiftList[shiftList.length - 1], "HH:mm:ss");
-    } else {
-      startTime = moment(shiftList[0], "HH:mm:ss");
-      endTime = moment(shiftList[shiftList.length - 1], "HH:mm:ss").add(
-        1,
-        "days"
+    if (baseTime) {
+      const mBasetime = moment(baseTime, "YYYY-MM-DD");
+      startTime = moment(`${baseTime} ${shiftList[0]}`, "YYYY-MM-DD HH:mm:ss");
+      startTime = moment(
+        `${mBasetime.add(1, "days").format("YYYY-MM-DD")} ${
+          shiftList[shiftList.length - 1]
+        }`,
+        "YYYY-MM-DD HH:mm:ss"
       );
+    } else {
+      if (
+        moment() >= moment("00:00:00", "HH:mm:ss") &&
+        moment() <= moment(shiftList[shiftList.length - 1], "HH:mm:ss")
+      ) {
+        startTime = moment(shiftList[0], "HH:mm:ss").subtract(1, "days");
+        endTime = moment(shiftList[shiftList.length - 1], "HH:mm:ss");
+      } else {
+        startTime = moment(shiftList[0], "HH:mm:ss");
+        endTime = moment(shiftList[shiftList.length - 1], "HH:mm:ss").add(
+          1,
+          "days"
+        );
+      }
     }
   } else {
-    startTime = moment(shiftList[0], "HH:mm:ss");
-    endTime = moment(shiftList[shiftList.length - 1], "HH:mm:ss");
+    startTime = moment(`${baseDate} ${shiftList[0]}`, "YYYY-MM-DD HH:mm:ss");
+    endTime = moment(
+      `${baseDate} ${shiftList[shiftList.length - 1]}`,
+      "YYYY-MM-DD HH:mm:ss"
+    );
   }
 
   return { startTime, endTime };
@@ -226,3 +243,8 @@ const getShiftTime = (plantName, shift) => {
 const currentShift = generateShift("18:00:00", "CIRACAS");
 
 console.log({ currentShift });
+const { startTime, endTime } = getShiftTime("CIRACAS", 3);
+console.log({
+  startTime: startTime.format("YYYY-MM-DD HH:mm:ss"),
+  endTime: endTime.format("YYYY-MM-DD HH:mm:ss")
+});
